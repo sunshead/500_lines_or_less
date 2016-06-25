@@ -56,3 +56,28 @@ class CodeBuilder(object):
 		global_namespace = {}
 		exec(python_source, global_namespace)
 		return global_namespace
+
+class Templite:
+	def __init__(self, text, *contexts):
+	#Construct a Templite with given text
+	#'contexts' are dictionaries of values to use for future renderings
+	self.context = {}
+	for context in contexts:
+		self.context.update(context)
+
+	#extract context variables into Python locals
+	self.all_vars = set()
+	self.loop_vars = set()
+
+	#Use the CodeBuilder class to build the compiled function
+	code = CodeBuilder()
+	#'context' is the data dictionary it should use, 'do_dots' is
+	#a function implementing dot attribute access
+	code.add_line("def render_funtion(context, do_dots):")	
+	code.indent()
+	vars_code = code.add_section()
+	code.add_line("result = []")
+	code.add_line("append_result = result.append")
+	code.add_line("extend_result = result.extend")
+	code.add_line("to_str = str")
+
