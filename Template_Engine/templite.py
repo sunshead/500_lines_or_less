@@ -81,3 +81,30 @@ class Templite:
 	code.add_line("extend_result = result.extend")
 	code.add_line("to_str = str")
 
+	#An inner function to help with buffering output strings
+	buffered = []
+	def flush_output():
+		#Force 'buffered' to the code builder.
+		if len(buffered) == 1:
+			code.add_line("append_result(%s)" % buffered[0])
+		elif len(buffered) > 1:
+			code.add_line("extend_result([%s])" % ", ".join(buffered))
+		del buffered[:]
+
+ops_stack = []
+# Split a string using a regex
+tokens = re.split(r"(?s)({{.*?}}|{%.*?%}|{#.*?#})", text)
+
+#The compilation code is a loop over these tokens:
+for token in tokens:
+	if token.startswith('{#'):
+		#ignore it and move on if is comment
+		continue
+    elif token.startswith('{{'):
+        # An expression to evaluate.
+        expr = self._expr_code(token[2:-2].strip())
+        buffered.append("to_str(%s)" % expr)
+    elif token.startswith('{%'):
+        # Action tag: split into words and parse further.
+        flush_output()
+        words = token[2:-2].strip().split()
